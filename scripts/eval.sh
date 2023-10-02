@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Define magenta and green color escape codes
 MAGENTA="\e[35m"
 RED="\e[31m"
 YELLOW="\e[33m"
@@ -11,7 +10,6 @@ CHECK="✔"
 project_directory="/home/vboxuser/Desktop/Inception/srcs"
 root_directory=/home/vboxuser/Desktop/Inception/
 
-# Function to display a magenta-colored prompt with a description and execute a command
 execute_command() {
   local description="$1"
   local command="$2"
@@ -24,8 +22,8 @@ execute_command() {
   sleep 5
 }
 
-
 # Function to check for the presence of a word in a file
+
 check_word_in_file() {
   local word="$1"
   local file="$2"
@@ -37,15 +35,19 @@ check_word_in_file() {
 }
 
 echo ""
-# Request 1: Check Docker Compose file for specific words
+
+# Request 1: Check Docker Compose file for specific words 'network:host' or 'links:'
+
 execute_command "Checking Docker Compose file for 'network:host' and 'links:' (must not be present)": \
 "check_word_in_file 'network:host' '${project_directory}/docker-compose.yml'; check_word_in_file 'links:' '${project_directory}/docker-compose.yml'"
 
-# Request 2: Check Docker Compose file for specific words
+# Request 2: Check Docker Compose file for specific words 'network' or 'networks'
+
 execute_command "Checking Docker Compose file for 'network' or 'networks' (must be present):" \
 "check_word_in_file 'network' '${project_directory}/docker-compose.yml'; check_word_in_file 'networks' '${project_directory}/docker-compose.yml'"
 
 # Request 3: Check Makefile and script files for specific word '--link' (must not be present)
+
 echo "${MAGENTA}Checking Makefile for '--link' (must not be present):${RESET}"
 echo "${YELLOW}Checking request...${RESET}"
 sleep 3
@@ -57,7 +59,8 @@ fi
 
 sleep 3
 
-# Loop through all .sh files in the root directory
+# Loop through all .sh files in the root directory to search for specific word '--link'
+
 find "${root_directory}" -type f -name "*.sh" | while read -r script_file; do
   echo ""
   echo "${MAGENTA}Checking $(basename "$script_file") for '--link' (must not be present):${RESET}"
@@ -72,7 +75,8 @@ done
 echo "${MAGENTA}---------------------------------------${RESET}"
 echo ""
 
-# Request 4: Check Dockerfiles for the presence of "tail -f" or background commands in the entrypoint section
+# Request 4: Check Dockerfiles for the presence of 'tail -f' or background commands in the entrypoint section
+
 find "${project_directory}" -type f -name "Dockerfile" | while read -r dockerfile; do
   execute_command "Checking $(basename "$dockerfile") for 'tail -f' or background commands in entrypoint (must not be present):" \
   "if grep -q -E 'ENTRYPOINT.*tail -f|ENTRYPOINT.*&' '$dockerfile'; then
@@ -83,6 +87,7 @@ find "${project_directory}" -type f -name "Dockerfile" | while read -r dockerfil
 done
 
 # Request 5: Ensure entrypoint scripts don't run programs in the background
+
 find "${root_directory}" -type f -name "*.sh" | while read -r script_file; do
   execute_command "Checking $(basename "$script_file") for background commands in entrypoints (must not be present):" \
   "if grep -r -E '.*&' '$script_file'; then
@@ -92,7 +97,8 @@ find "${root_directory}" -type f -name "*.sh" | while read -r script_file; do
   fi"
 done
 
-# Request 6: Ensure no scripts run an infinite loop with specific commands
+# Request 6: Ensure no scripts run an infinite loop with commands 'sleep infinity', 'tail -f /dev/null' or 'tail -f /dev/random'
+
 find "${root_directory}" -type f -name "*.sh" | while read -r script_file; do
   if grep -q -r -E 'sleep infinity|tail -f /dev/null|tail -f /dev/random' "$script_file"; then
     execute_command "Checking for infinite loops in script file (must not be present):" \
@@ -104,14 +110,17 @@ find "${root_directory}" -type f -name "*.sh" | while read -r script_file; do
 done
 
 # Request 8: Ensure all files to config are located inside the srcs folder
+
 execute_command "Checking if config files are located inside the srcs folder:" \
 "ls '${project_directory}'"
 
 # Request 9: Ensure srcs and the Makefile are located inside the root folder
+
 execute_command "Checking if the srcs directory and Makefile are inside the root folder:" \
 "ls '${root_directory}'"
 
 # Request 15: Ensure WordPress is installed and accessible via HTTPS
+
 if curl -I -k https://ntozzi.42.fr &>/dev/null; then
   execute_command "Verifying WordPress installation via HTTPS (must work):" \
     "echo '${GREEN}WordPress is installed and accessible via HTTPS.${RESET}'"
@@ -121,6 +130,7 @@ else
 fi
 
 # Request 16: Ensure WordPress is installed and verify it is not accessible via HTTP
+
 final_url=$(curl -I -L http://ntozzi.42.fr 2>/dev/null | awk '/^Location: / { print $2 }' | tr -d '\r\n')
 
 if [ "$final_url" = "https://"* ]; then
@@ -133,6 +143,7 @@ fi
 
 
 # Request 21: Try to access the service through port 80 and capture the response status code
+
 response_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost)
 if [ "$response_code" -eq 200 ]; then
   execute_command "Trying to access the service through port 80 (must fail):" \
@@ -143,6 +154,7 @@ else
 fi
 
 # Request 19: Ensure Docker images have specific names (mariadb, wordpress, nginx)
+
 if docker images | grep -q -E 'mariadb|wordpress|nginx'; then
   execute_command "Checking for specific Docker image names (mariadb, wordpress, nginx):" \
     "echo '${GREEN}All required Docker images are found.${RESET}'"
@@ -152,6 +164,7 @@ else
 fi
 
 # Request 22: Use 'docker-compose ps' to check WordPress container
+
 if docker ps | grep -q "wordpress"; then
   execute_command "Checking WordPress container using 'docker-compose ps':" \
     "echo '${GREEN}WordPress container is running.${RESET}'"
@@ -161,6 +174,7 @@ else
 fi
 
 # Request 22: Use 'docker-compose ps' to check MariaDB container
+
 if docker ps | grep -q "mariadb"; then
   execute_command "Checking MariaDB container using 'docker-compose ps':" \
     "echo '${GREEN}MariaDB container is running.${RESET}'"
@@ -170,6 +184,7 @@ else
 fi
 
 # Request 22: Use 'docker-compose ps' to check Nginx container
+
 if docker ps | grep -q "nginx"; then
   execute_command "Checking Nginx container using 'docker-compose ps':" \
     "echo '${GREEN}Nginx container is running.${RESET}'"
@@ -179,6 +194,7 @@ else
 fi
 
 # Inspect the volume and check its device field
+
 volume_device=$(docker volume inspect wordpress --format '{{ .Options.device }}')
 expected_device="/home/ntozzi.42.fr/data/wordpress/"
 
@@ -190,7 +206,8 @@ else
     "echo '${RED}Device path is incorrect: $volume_device.${RESET}'"
 fi
 
-# Inspect the volume and check its device path
+# Inspect the volume and check its device field
+
 volume_device=$(docker volume inspect db --format '{{ .Options.device }}')
 expected_device="/home/ntozzi.42.fr/data/db/"
 
@@ -203,6 +220,7 @@ else
 fi
 
 # Request 10: Run Docker commands to stop containers, remove containers, images, volumes, and networks
+
 execute_command "Stopping containers:" \
   "docker stop \$(docker ps -qa)" 
 
@@ -219,6 +237,7 @@ execute_command "Removing networks:" \
   "docker network rm \$(docker network ls -q) 2>/dev/null"
 
 # Request 11: Ensure docker-network is used in the compose file
+
 execute_command "Checking if 'docker-network' is used in the Docker Compose file:" \
 "if grep -q 'networks' '${project_directory}/docker-compose.yml'; then
   echo '${GREEN}docker-network found in this file.${RESET}'
@@ -227,18 +246,22 @@ else
 fi"
 
 # Request 12: List Docker networks
+
 execute_command "Listing Docker Networks:" \
 "docker network ls"
 
 # Request 13: Check for the word "443" in Nginx config
+
 execute_command "Checking Nginx config file for 443 (must be present):" \
 "check_word_in_file '443' '${project_directory}/requirements/nginx/conf/nginx.conf';"
 
 # Request 14: Ensure an SSL/TLS certificate is used
+
 execute_command "Checking Nginx config file for SSL certificate (must be present):" \
 "check_word_in_file 'ssl_certificate' '${project_directory}/requirements/nginx/conf/nginx.conf';"
 
 # Request 17: Ensure one Dockerfile per service (WordPress, MariaDB, NGINX) and that they are not empty
+
 if [ -f "${project_directory}/requirements/wordpress/Dockerfile" ] && \
    [ -f "${project_directory}/requirements/mariadb/Dockerfile" ] && \
    [ -f "${project_directory}/requirements/nginx/Dockerfile" ]; then
@@ -250,6 +273,7 @@ else
 fi
 
 # Request 18: Ensure every container is built from the penultimate stable version of Alpine Linux or Debian Buster
+
 if grep -q -r 'FROM alpine:3.' "${project_directory}/requirements/mariadb/Dockerfile" || grep -q -r 'FROM debian:buster' "${project_directory}/requirements/mariadb/Dockerfile"; then
   execute_command "Checking Alpine Linux and Debian Buster versions in MariaDB Dockerfile:" \
     "echo '${GREEN}Correct Alpine Linux or Debian Buster version found in MariaDB Dockerfile.${RESET}'"
@@ -259,6 +283,7 @@ else
 fi
 
 # Request 18: Ensure every container is built from the penultimate stable version of Alpine Linux or Debian Buster
+
 if grep -q -r 'FROM alpine:3.' "${project_directory}/requirements/nginx/Dockerfile" || grep -q -r 'FROM debian:buster' "${project_directory}/requirements/nginx/Dockerfile"; then
   execute_command "Checking Alpine Linux and Debian Buster versions in Nginx Dockerfile:" \
     "echo '${GREEN}Correct Alpine Linux or Debian Buster version found in Nginx Dockerfile.${RESET}'"
@@ -268,6 +293,7 @@ else
 fi
 
 # Request 18: Ensure every container is built from the penultimate stable version of Alpine Linux or Debian Buster
+
 if grep -q -r 'FROM alpine:3.' "${project_directory}/requirements/wordpress/Dockerfile" || grep -q -r 'FROM debian:buster' "${project_directory}/requirements/wordpress/Dockerfile"; then
   execute_command "Checking Alpine Linux and Debian Buster versions in Wordpress Dockerfile:" \
     "echo '${GREEN}Correct Alpine Linux or Debian Buster version found in Wordpress Dockerfile.${RESET}'"
@@ -277,10 +303,12 @@ else
 fi
 
 # Request 20: Ensure the Makefile sets up all services via Docker Compose without crashing
+
 execute_command "Checking Docker Compose file for 'restart:always' (must be present to prevent crashing):" \
 "check_word_in_file 'restart: always' '${project_directory}/docker-compose.yml';"
 
 # Request 29: Ensure a TLSv1.2 or 1.3 is used
+
 execute_command "Checking server config for 'TLSv1.2' or 'TLSv1.3' (must be present):" \
 "check_word_in_file 'TLSv1.2' '${project_directory}/requirements/nginx/conf/nginx.conf'; check_word_in_file 'TLSv1.3' '${project_directory}/requirements/nginx/conf/nginx.conf'"
 
