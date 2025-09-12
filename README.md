@@ -1,10 +1,17 @@
 Inception 
 
 ## Table of Contents
+* [Summary](#summary)
 * [Subject](#subject)
 * [Usage](#usage)
 * [Project Status](#project-status)
 * [Additional Notes](#additional-notes)
+
+
+## Summary
+
+Comprehensive Docker Compose infrastructure project designed to deploy a multi-service web environment. Includes custom Dockerfiles for Nginx with TLS, WordPress + php-fpm, and MariaDB, with dedicated volumes, network configuration, and container restart policies. Built from scratch on Debian images to demonstrate advanced system administration.
+
 
 ## Subject
 
